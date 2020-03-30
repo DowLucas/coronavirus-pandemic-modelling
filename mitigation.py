@@ -4,6 +4,7 @@ import json
 import os
 import difflib
 import pycountry
+from tqdm import tqdm
 
 
 directory = "Data1"
@@ -135,6 +136,9 @@ def fix_country(country):
 
     return country
 
+
+
+
 def make_data():
     data = load_json("Data1/mitigation_data.json")
     data = fixUSStates(data)
@@ -143,14 +147,34 @@ def make_data():
 
     df = pd.DataFrame()
 
-    for country in data.keys():
+
+    for country in tqdm(data.keys()):
+        country_name = country
         country = fix_country(country)
-        c = country
 
         country = pycountry.countries.get(name=country)
+
+
         if country == None:
-            print(c)
-            country = pycountry.countries.get(common_name=country)
+            continue
+        else:
+            country_code = country.alpha_3
+
+        num_measures = 0
+
+        for date in dates:
+            date = date.strftime("%b %d, %Y")
+
+            if date in data[country_name].keys():
+                num_measures += data[country_name][date]["Total Measures Taken"]
+
+            df = df.append({"Country Code": country_code, "Date": date, "Num Measures": num_measures}, ignore_index=True)
+
+    df.to_csv("Data1/mitigation_date_data.csv")
+
+
+
+
 
 
 
