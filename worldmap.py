@@ -102,7 +102,8 @@ fig.update_layout(
         'center': {'lon': 10, 'lat': 10},
         'style': "carto-positron",
         'center': {'lon': -20, 'lat': -20},
-        'zoom': 1})
+        'zoom': 1,
+    })
 
 
 fig.show()
