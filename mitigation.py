@@ -34,7 +34,26 @@ measures = Counter(data)
 print(df.columns)
 
 
+def fixUSStates(data):
 
+    US_states = list(filter(lambda k: ":" in k, data.keys()))
+    US_data = {}
+    
+    for state in US_states:
+        for date, measure_data in data[state].items():
+            if date not in US_data.keys():
+                US_data[date] = measure_data
+            else:
+                for measure in measure_data["Measures Taken"]:
+                    US_data[date]["Measures Taken"].append(measure)
+
+                US_data[date]["Total Measures Taken"] += measure_data["Total Measures Taken"]
+
+        del data[state]
+
+    data["USA"] = US_data
+
+    return data
 
 def create_json(df, fp):
     data = {}
@@ -43,21 +62,23 @@ def create_json(df, fp):
             continue
         sub_df = df.loc[df["Country"] == country][["Date Start", "Keywords"]]
         sub_df = sub_df[(sub_df["Date Start"].notna()) & (sub_df["Keywords"].notna())]
-        measures_taken = []
+
 
         per_day_data = {}
 
         for date, measure in sub_df[["Date Start" ,"Keywords"]].values:
+            measures_taken = []
             for m in measure.split(","):
                 measures_taken.append(m.lstrip())
 
             per_day_data[date] = {"Measures Taken": measures_taken, "Total Measures Taken": len(measures_taken)}
 
         data[country] = per_day_data
-    print(json.dumps(data, indent=2))
-    #json.dump(data, open(fp, "w"))
+
+    json.dump(data, open(fp, "w"))
 
 
+#create_json(df, "Data1/mitigation_data.json")
 
 def load_json(fp):
     return json.load(open(fp, "r"))
@@ -109,12 +130,15 @@ def fix_country(country):
         country = "Moldova, Republic of"
     if country == "South Korea" or country == "North Korea":
         country = "Korea, Democratic People's Republic of"
+    if country == "USA":
+        country = "United States"
 
     return country
 
-print(list(pycountry.countries))
 def make_data():
     data = load_json("Data1/mitigation_data.json")
+    data = fixUSStates(data)
+    print(json.dumps(data, indent=2))
     dates = getAllDates(data)
 
     df = pd.DataFrame()
