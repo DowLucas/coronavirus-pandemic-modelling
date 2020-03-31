@@ -8,7 +8,7 @@ from tqdm import tqdm
 import plotly.graph_objs as go
 import chart_studio
 import chart_studio.plotly as py
-
+import plotly.express as px
 
 directory = "Data1"
 
@@ -18,11 +18,13 @@ directory = "Data1"
 
 
 
-def load(file):
+def load_csv(file):
     return pd.read_csv(os.path.join(directory, file))
 
+def load_json(file):
+    return json.load(open(os.path.join(directory, file), "r"))
 
-df = load("COVID 19 Containment measures data.csv")
+df = load_csv("COVID 19 Containment measures data.csv")
 
 keywords = df["Keywords"]
 keywords.dropna(inplace=True)
@@ -86,9 +88,6 @@ def create_json(df, fp):
 
 create_json(df, "Data1/mitigation_data.json")
 
-def load_json(fp):
-    return json.load(open(fp, "r"))
-
 
 
 from datetime import date, timedelta, datetime
@@ -96,12 +95,14 @@ import time
 
 
 
-def getAllDates(data):
+def getAllDates(data=None, format=None):
+    if data == None:
+        data = load_json("mitigation_data.json")
     dates = []
     for country in data.values():
         for k in country.keys():
             t = time.mktime(datetime.strptime(k, "%b %d, %Y").timetuple())
-            uniform_date = datetime.utcfromtimestamp(t).strftime("%Y/%m/%d")
+            uniform_date = datetime.utcfromtimestamp(t).strftime(format)
             dates.append(uniform_date)
 
     dates = sorted(dates)
@@ -116,7 +117,10 @@ def getAllDates(data):
     for i in range(delta.days + 1):
         day = from_date + timedelta(days=i)
         dates.append(day)
-    return dates
+    if format:
+        return list(map(lambda x: datetime.strftime(x, format), dates))
+    else:
+        return dates
 
 
 def fix_country(country):
@@ -193,70 +197,6 @@ def load_mitigation_date_data(fp):
     return pd.read_csv(fp)
 
 
-#make_data()
-df = load_mitigation_date_data("Data1/mitigation_date_data.csv")
-print(df.loc[df["Country Code"] == "USA"]["Num Measures"].values)
-#quit()
-def make_animation():
-    data = load_json("Data1/mitigation_data.json")
-    dates = getAllDates(data)
-
-    print(df.head())
-
-    dates = list(map(lambda date: date.strftime("%b %d, %Y"), dates))
-
-    sdate = dates[0]
-    print(sdate)
-    test_df = df.loc[df["Date"] == sdate]
-
-    zmax = 50
-    zmin = 0
-    print(zmax)
-
-    # Create frame data
-    frames = []
-    for date in dates[1:]:
-        df_date = df.loc[df["Date"] == date]
-        frames.append(
-            go.Frame(data=[go.Choropleth(
-                locations=df_date["Country Code"],
-                z=df_date["Num Measures"],
-                text=df_date["Measures"],
-                zmax=zmax,
-                zmin=zmin,
-                colorscale="aggrnyl",
-            )])
-        )
-
-
-    fig = go.Figure(data=[go.Choropleth(
-        locations=test_df["Country Code"],
-        z=test_df["Num Measures"],
-        text=test_df["Measures"],
-        zmax=zmax,
-        zmin=0,
-        colorscale="aggrnyl",
-    )],
-        layout=go.Layout(
-            xaxis=dict(range=[0, 5], autorange=False),
-            yaxis=dict(range=[0, 5], autorange=False),
-            title="Start Animation",
-            updatemenus=[dict(
-                type="buttons",
-                buttons=[dict(label="Play",
-                              method="animate",
-                              args=[None])])]
-        ),
-        frames = frames
-    )
-
-    fig.update_layout(
-        mapbox_style="carto-positron",
-        title="Number of measures taken by countries over time"
-    )
-    fig.show()
-
-
 
 
 def make_animation2(scope="world"):
@@ -283,56 +223,24 @@ def make_animation2(scope="world"):
     fig.show()
     #py.plot(fig, filename="mitigation over time", auto_open=True)
 
-make_animation2()
-
-'''
-fig = go.Figure(
-    data=[go.Choropleth(
-    locations = df['CODE'],
-    z = df['GDP (BILLIONS)'],
-    text = df['COUNTRY'],
-    )],
-    layout=go.Layout(
-        xaxis=dict(range=[0, 5], autorange=False),
-        yaxis=dict(range=[0, 5], autorange=False),
-        title="Start Title",
-        updatemenus=[dict(
-            type="buttons",
-            buttons=[dict(label="Play",
-                          method="animate",
-                          args=[None])])]
-    ),
-    frames = [go.Frame(data=go.Choropleth(
-    locations = df['CODE'],
-    z = df['GDP (BILLIONS)'],
-    text = df['COUNTRY'],
-    colorscale = 'Blues',
-    autocolorscale=False,
-    reversescale=True,
-    marker_line_color='darkgray',
-    marker_line_width=0.5,
-    colorbar_tickprefix = 'SEK',
-    colorbar_title = 'GDP<br>Millions US$',
-    ), layout=go.Layout(title_text="End Title"))],
-)
-
-fig2 = go.Figure(
-    data=[go.Scatter(x=[0, 1], y=[0, 1])],
-    layout=go.Layout(
-        xaxis=dict(range=[0, 5], autorange=False),
-        yaxis=dict(range=[0, 5], autorange=False),
-        title="Start Title",
-        updatemenus=[dict(
-            type="buttons",
-            buttons=[dict(label="Play",
-                          method="animate",
-                          args=[None])])]
-    ),
-    frames=[go.Frame(data=[go.Scatter(x=[1, 2], y=[1, 2])]),
-            go.Frame(data=[go.Scatter(x=[1, 4], y=[1, 4])]),
-            go.Frame(data=[go.Scatter(x=[3, 4], y=[3, 4])],
-                     layout=go.Layout(title_text="End Title"))]
-)
+#make_animation2()
 
 
-'''
+
+
+def quantize_mitigations(measures):
+    df = pd.DataFrame(columns=["Strategy"])
+
+    df["Strategy"] = list(measures.keys())
+    print(df.head())
+
+
+def date_implemented(country_code):
+    df = load_csv("mitigation_date_data.csv")
+    df_country = df.loc[df["Country Code"] == country_code]
+    df_country_and_measures = df_country.loc[df["Measures"] != "No new mitigation"].drop(columns=["Unnamed: 0"], axis=1)
+    dates = getAllDates(format="%Y/%m/%d")
+
+    data = load_json("data_new.json")
+
+date_implemented("ITA")
