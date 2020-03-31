@@ -2,20 +2,15 @@ import pandas as pd
 import numpy as np
 import json
 import os
-import difflib
 import pycountry
 from tqdm import tqdm
 import plotly.graph_objs as go
-import chart_studio
-import chart_studio.plotly as py
 import plotly.express as px
+from generate_data_new import CountryDict
 
 directory = "Data1"
 
-
 # Number of measures taken by date
-
-
 
 
 def load_csv(file):
@@ -46,7 +41,6 @@ def fixUSStates(data):
     print(US_states)
     US_data = {}
 
-    tmp = []
 
     for state in US_states:
         for date, measure_data in data[state].items():
@@ -102,7 +96,7 @@ def getAllDates(data=None, format=None):
     for country in data.values():
         for k in country.keys():
             t = time.mktime(datetime.strptime(k, "%b %d, %Y").timetuple())
-            uniform_date = datetime.utcfromtimestamp(t).strftime(format)
+            uniform_date = datetime.utcfromtimestamp(t).strftime("%Y/%m/%d")
             dates.append(uniform_date)
 
     dates = sorted(dates)
@@ -149,7 +143,7 @@ def fix_country(country):
 
 
 def make_data():
-    data = load_json("Data1/mitigation_data.json")
+    data = load_json("mitigation_data.json")
     data = fixUSStates(data)
     #print(json.dumps(data, indent=2))
     dates = getAllDates(data)
@@ -189,7 +183,7 @@ def make_data():
         #print(df.loc[df["Country Code"] == "USA"]["Num Measures"].values)
 
 
-    #df.to_csv("Data1/mitigation_date_data.csv")
+    df.to_csv("Data1/mitigation_date_data.csv")
 
 #make_data()
 
@@ -200,9 +194,9 @@ def load_mitigation_date_data(fp):
 
 
 def make_animation2(scope="world"):
-    data = load_json("Data1/mitigation_data.json")
+    data = load_json("mitigation_data.json")
     dates = getAllDates(data)
-    df = load_mitigation_date_data("Data1/mitigation_date_data.csv")
+    df = load_csv("mitigation_date_data.csv")
     print(df.head())
 
 
@@ -226,6 +220,13 @@ def make_animation2(scope="world"):
 #make_animation2()
 
 
+def convertDateFormat(date, format):
+    t = time.mktime(datetime.strptime(date, "%b %d, %Y").timetuple())
+    new_date = datetime.utcfromtimestamp(t).strftime(format)
+    return new_date
+
+
+
 
 
 def quantize_mitigations(measures):
@@ -241,6 +242,95 @@ def date_implemented(country_code):
     df_country_and_measures = df_country.loc[df["Measures"] != "No new mitigation"].drop(columns=["Unnamed: 0"], axis=1)
     dates = getAllDates(format="%Y/%m/%d")
 
+    print(df_country_and_measures.head(), df_country_and_measures.columns)
+
     data = load_json("data_new.json")
+    countries = list(data.keys())
+    cd = CountryDict(countries)
+    country_name = cd.countrycodeToCountry[country_code]
+
+    country_data = data[country_name]
+    provinces = country_data.keys()
+
+    values_to_remove = []
+
+    Y = np.empty((len(provinces), len(dates), 3), dtype=np.int32)
+
+    #print(country_dates, dates)
+
+    for i, province in enumerate(provinces):
+        province_data = country_data[province]
+        data_dates = list(province_data.keys())
+        val_remove = 0
+        while dates[-1] != data_dates[-1]:
+            val_remove += 1
+            dates.pop(-1)
+        values_to_remove.append(val_remove)
+        for j, date in enumerate(dates):
+            if date not in data_dates:
+                Y[i][j] = [0,0,0]
+            else:
+                Y[i][j] = [x for x in province_data[date].values()]
+
+    print(dates)
+    for n, N in enumerate(values_to_remove):
+        Y = Y[n][:-N]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            y=Y[:,0],
+            mode='lines+markers',
+            name="Confirmed Cases"
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            y=Y[:,1],
+            mode='lines+markers',
+            name="Confirmed Deaths",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            y=Y[:,2],
+            mode='lines+markers',
+            name="Confirmed Recoveries",
+        )
+    )
+
+
+
+    height_of_lines = max(Y.flatten())
+    lines_X = [dates.index(convertDateFormat(row["Date"], format="%Y/%m/%d")) for n, row in df_country_and_measures.iterrows()]
+
+    fig.add_trace(go.Scatter(
+        x=lines_X,
+        y=[height_of_lines+80*n for n in range(len(lines_X))],
+        text=[row["Measures"] for n, row in df_country_and_measures.iterrows()],
+        mode="text",
+
+    ))
+
+    for n, row in df_country_and_measures.iterrows():
+        date = convertDateFormat(row["Date"], format="%Y/%m/%d")
+        x = dates.index(date)
+        fig.add_shape(
+            dict(
+                type="line",
+                name="test",
+                x0=x,
+                y0=0,
+                x1=x,
+                y1=height_of_lines,
+                line=dict(
+                    color="RoyalBlue",
+                    width=2,
+                    dash="dot",
+                )
+            ))
+
+    fig.update_shapes(dict(xref='x', yref='y'))
+    fig.show()
 
 date_implemented("ITA")
