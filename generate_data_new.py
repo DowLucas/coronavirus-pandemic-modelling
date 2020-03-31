@@ -5,6 +5,23 @@ import os
 import json
 import datetime
 import time
+import pycountry
+
+class CountryDict:
+    def __init__(self, countries):
+        self.countryToCountrycode = {pycountry.countries.get(country).alpha_3: country for country in countries}
+        self.countrycodeToCountry = {country: pycountry.countries.get(country).alpha_3 for country in countries}
+        self.countryToidx = {pycountry.countries.get(country).alpha_3: idx for idx, country in enumerate(countries)}
+        self.idxToCountry = {idx: pycountry.countries.get(country).alpha_3 for idx, country in enumerate(countries)}
+
+
+    def getIdx(self, country):
+        if len(country) == 3:
+            country = self.countryToCountrycode[country]
+        return self.countryToidx[country]
+
+    def getCountry(self, index):
+        return self.idxToCountry[index]
 
 class DataExtractor():
     def __init__(self, directory, files):
