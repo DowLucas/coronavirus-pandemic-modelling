@@ -6,7 +6,7 @@ import json
 import commonFuncs
 
 
-def reconstructData():
+def reconstructData(data):
     new_data = {}
     # Grouping all countries
     for coun, data_coun in data.items():
@@ -36,22 +36,45 @@ def getList(country_data, type="Confirmed"):
 
 data = json.load(open("Data1/data_countries_provinces_grouped.json", "r"))
 
-test_data = data["Sweden"]
+df = pd.DataFrame(columns=["x", "y", "con", "t"])
 
-dates = list(test_data.keys())
+X = []
+Y = []
+for country in list(data.keys()):
+    country_data = data[country]
 
-x = list(commonFuncs.get_cases_per_week(test_data, dates)["Confirmed"].values())
-y = getList(test_data)[:-1]
+    dates = list(country_data.keys())
+    print(len(dates))
 
-print(x, y)
+    x = list(commonFuncs.get_cases_per_unit_time(country_data, dates, 7)["Confirmed"].values())
+    y = list(commonFuncs.get_new_cases_per_unit_time(country_data, dates, 7)["Confirmed"].values())
 
-fig = px.scatter(
-    x=x,
-    y=y
-)
+    x = np.array(x)
+    x[x == 0] = 1
+
+    y = np.array(y)
+    y[y == 0] = 1
+
+    print(x, y)
+
+    sub_df = pd.DataFrame(columns=["x", "y", "con", "t"])
+    sub_df["x"] = x
+    sub_df["y"] = y
+    sub_df["con"] = [country for _ in range(len(x))]
+    sub_df["t"] = [t for t in range(len(x))]
+
+    df = pd.concat([sub_df, df], ignore_index=True)
+print(df)
+
+range_x = max(df["x"].values.flatten())*2
+range_y = max(df["y"].values.flatten())*2
+print(range_x)
 
 
-fig.update_layout(xaxis_type="log", yaxis_type="log")
+fig = px.scatter(df, x="x", y="y", hover_name="con", animation_frame="t", log_x=True, log_y=True, text="con", trendline="lowess",
+                 range_x=[0.5, range_x], range_y=[0.5, range_y]
+   )
+
 fig.show()
 
 

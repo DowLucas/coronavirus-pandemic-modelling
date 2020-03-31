@@ -9,7 +9,7 @@ import time
 import datetime
 import cv2
 from tqdm import tqdm
-
+from commonFuncs import *
 
 
 def generate_json_data():
@@ -82,48 +82,6 @@ def get_most_case_provinces(country_data):
 
     return list(map(lambda x: x[0], all_province_cases))[:10]
 
-def datePairs(dates):
-    date_pairs = []
-    for n in np.arange(0, len(dates)-1, 1):
-        date_pairs.append((dates[n], dates[n+1]))
-        if n == len(dates):
-            break
-    return date_pairs
-
-def get_doubling_data(province_data, dates):
-    #dates = list(dates.keys())
-
-    date_pairs = datePairs(dates)
-
-    data = {"Confirmed": {}, "Deaths": {}, "Recovered": {}}
-    for pair in date_pairs:
-        if pair[0] not in province_data.keys():
-            continue
-        for case_type in province_data[pair[0]].keys():
-            try:
-                rate_delta = province_data[pair[1]][case_type]/province_data[pair[0]][case_type]
-            except Exception:
-                rate_delta = 0
-            try:
-                data[case_type][f"{pair[0]}-{pair[1]}"] = rate_delta
-            except:
-                continue
-
-    return data
-
-def get_cases_per_day(province_data, dates):
-    date_pairs = datePairs(dates)
-    data = {"Confirmed": {}, "Deaths": {}, "Recovered": {}}
-    for pair in date_pairs:
-        if pair[0] not in province_data.keys():
-            continue
-        for case_type in province_data[pair[0]].keys():
-            new_cases = province_data[pair[1]][case_type]-province_data[pair[0]][case_type]
-            try:
-                data[case_type][f"{pair[0]}-{pair[1]}"] = new_cases
-            except:
-                continue
-    return data
 
 def createVideoAnimation(country, provinces, country_data):
     os.mkdir("animations") if not os.path.exists("animations") else None
