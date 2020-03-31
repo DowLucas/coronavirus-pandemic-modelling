@@ -281,7 +281,8 @@ def date_implemented(country_code):
         go.Scatter(
             y=Y[:,0],
             mode='lines+markers',
-            name="Confirmed Cases"
+            name="Confirmed Cases",
+            text=df_country["Date"]
         )
     )
     fig.add_trace(
@@ -304,13 +305,6 @@ def date_implemented(country_code):
     height_of_lines = max(Y.flatten())
     lines_X = [dates.index(convertDateFormat(row["Date"], format="%Y/%m/%d")) for n, row in df_country_and_measures.iterrows()]
 
-    fig.add_trace(go.Scatter(
-        x=lines_X,
-        y=[height_of_lines+80*n for n in range(len(lines_X))],
-        text=[row["Measures"] for n, row in df_country_and_measures.iterrows()],
-        mode="text",
-
-    ))
 
     for n, row in df_country_and_measures.iterrows():
         date = convertDateFormat(row["Date"], format="%Y/%m/%d")
@@ -318,7 +312,6 @@ def date_implemented(country_code):
         fig.add_shape(
             dict(
                 type="line",
-                name="test",
                 x0=x,
                 y0=0,
                 x1=x,
@@ -333,4 +326,4 @@ def date_implemented(country_code):
     fig.update_shapes(dict(xref='x', yref='y'))
     fig.show()
 
-date_implemented("ITA")
+date_implemented("SWE")
