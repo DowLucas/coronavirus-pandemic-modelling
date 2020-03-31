@@ -5,6 +5,9 @@ import os
 import difflib
 import pycountry
 from tqdm import tqdm
+import plotly.graph_objs as go
+import chart_studio
+import chart_studio.plotly as py
 
 
 directory = "Data1"
@@ -38,8 +41,11 @@ print(df.columns)
 def fixUSStates(data):
 
     US_states = list(filter(lambda k: ":" in k, data.keys()))
+    print(US_states)
     US_data = {}
-    
+
+    tmp = []
+
     for state in US_states:
         for date, measure_data in data[state].items():
             if date not in US_data.keys():
@@ -51,9 +57,9 @@ def fixUSStates(data):
                 US_data[date]["Total Measures Taken"] += measure_data["Total Measures Taken"]
 
         del data[state]
-
+    
     data["USA"] = US_data
-
+    #print(json.dumps(data,  indent=2))
     return data
 
 def create_json(df, fp):
@@ -76,10 +82,9 @@ def create_json(df, fp):
 
         data[country] = per_day_data
 
-    json.dump(data, open(fp, "w"))
+    json.dump(data, open(fp, "w"), indent=2)
 
-
-#create_json(df, "Data1/mitigation_data.json")
+create_json(df, "Data1/mitigation_data.json")
 
 def load_json(fp):
     return json.load(open(fp, "r"))
@@ -142,11 +147,11 @@ def fix_country(country):
 def make_data():
     data = load_json("Data1/mitigation_data.json")
     data = fixUSStates(data)
-    print(json.dumps(data, indent=2))
+    #print(json.dumps(data, indent=2))
     dates = getAllDates(data)
-
     df = pd.DataFrame()
 
+    print(len(list(filter(lambda x: "US" in x, data.keys()))))
 
     for country in tqdm(data.keys()):
         country_name = country
@@ -160,26 +165,125 @@ def make_data():
         else:
             country_code = country.alpha_3
 
-        num_measures = 0
+        if country.name == "United States":
+            print(country_name)
 
+        num_measures = 0
         for date in dates:
+            measures_on_the_day = 'No new mitigation'
+
             date = date.strftime("%b %d, %Y")
 
             if date in data[country_name].keys():
                 num_measures += data[country_name][date]["Total Measures Taken"]
+                measures_on_the_day = data[country_name][date]["Measures Taken"]
+                measures_on_the_day = "".join([m+" | " for m in measures_on_the_day])
 
-            df = df.append({"Country Code": country_code, "Date": date, "Num Measures": num_measures}, ignore_index=True)
+            #print(date, num_measures)
+            df = df.append({"Country Code": country_code, "Date": date, "Num Measures": num_measures, "Measures": measures_on_the_day}, ignore_index=True)
 
-    df.to_csv("Data1/mitigation_date_data.csv")
-
-
-
-
-
+        #print(df.loc[df["Country Code"] == "USA"]["Num Measures"].values)
 
 
+    #df.to_csv("Data1/mitigation_date_data.csv")
 
-make_data()
+#make_data()
+
+def load_mitigation_date_data(fp):
+    return pd.read_csv(fp)
+
+
+#make_data()
+df = load_mitigation_date_data("Data1/mitigation_date_data.csv")
+print(df.loc[df["Country Code"] == "USA"]["Num Measures"].values)
+#quit()
+def make_animation():
+    data = load_json("Data1/mitigation_data.json")
+    dates = getAllDates(data)
+
+    print(df.head())
+
+    dates = list(map(lambda date: date.strftime("%b %d, %Y"), dates))
+
+    sdate = dates[0]
+    print(sdate)
+    test_df = df.loc[df["Date"] == sdate]
+
+    zmax = 50
+    zmin = 0
+    print(zmax)
+
+    # Create frame data
+    frames = []
+    for date in dates[1:]:
+        df_date = df.loc[df["Date"] == date]
+        frames.append(
+            go.Frame(data=[go.Choropleth(
+                locations=df_date["Country Code"],
+                z=df_date["Num Measures"],
+                text=df_date["Measures"],
+                zmax=zmax,
+                zmin=zmin,
+                colorscale="aggrnyl",
+            )])
+        )
+
+
+    fig = go.Figure(data=[go.Choropleth(
+        locations=test_df["Country Code"],
+        z=test_df["Num Measures"],
+        text=test_df["Measures"],
+        zmax=zmax,
+        zmin=0,
+        colorscale="aggrnyl",
+    )],
+        layout=go.Layout(
+            xaxis=dict(range=[0, 5], autorange=False),
+            yaxis=dict(range=[0, 5], autorange=False),
+            title="Start Animation",
+            updatemenus=[dict(
+                type="buttons",
+                buttons=[dict(label="Play",
+                              method="animate",
+                              args=[None])])]
+        ),
+        frames = frames
+    )
+
+    fig.update_layout(
+        mapbox_style="carto-positron",
+        title="Number of measures taken by countries over time"
+    )
+    fig.show()
+
+
+
+
+def make_animation2(scope="world"):
+    data = load_json("Data1/mitigation_data.json")
+    dates = getAllDates(data)
+    df = load_mitigation_date_data("Data1/mitigation_date_data.csv")
+    print(df.head())
+
+
+    fig = px.choropleth(
+        df,
+        locations="Country Code",
+        color="Num Measures",
+        hover_name="Measures",
+        animation_frame="Date",
+        color_continuous_scale=px.colors.sequential.matter,
+        range_color=(0, 50),
+        scope=scope
+    )
+    fig.layout.update(
+        title="Number of mitigation measure taken by different countries over time",
+        transition={'duration': 5000},
+    )
+    fig.show()
+    #py.plot(fig, filename="mitigation over time", auto_open=True)
+
+make_animation2()
 
 '''
 fig = go.Figure(
