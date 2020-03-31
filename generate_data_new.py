@@ -9,11 +9,10 @@ import pycountry
 
 class CountryDict:
     def __init__(self, countries):
-        self.countryToCountrycode = {pycountry.countries.get(country).alpha_3: country for country in countries}
-        self.countrycodeToCountry = {country: pycountry.countries.get(country).alpha_3 for country in countries}
-        self.countryToidx = {pycountry.countries.get(country).alpha_3: idx for idx, country in enumerate(countries)}
-        self.idxToCountry = {idx: pycountry.countries.get(country).alpha_3 for idx, country in enumerate(countries)}
-
+        self.countryToCountrycode = {country: pycountry.countries.get(name=country).alpha_3 for country in countries if pycountry.countries.get(name=country) is not None}
+        self.countrycodeToCountry = {pycountry.countries.get(name=country).alpha_3: country for country in countries if pycountry.countries.get(name=country) is not None}
+        self.countryToidx = {pycountry.countries.get(name=country).alpha_3: idx for idx, country in enumerate(countries) if pycountry.countries.get(name=country) is not None}
+        self.idxToCountry = {idx: pycountry.countries.get(name=country).alpha_3 for idx, country in enumerate(countries) if pycountry.countries.get(name=country) is not None}
 
     def getIdx(self, country):
         if len(country) == 3:
@@ -95,5 +94,5 @@ class DataExtractor():
 
 
 
-de = DataExtractor("Data1", [x for x in os.listdir("Data1") if "time_series" in x])
-de.create_data("Confirmed")
+#de = DataExtractor("Data1", [x for x in os.listdir("Data1") if "time_series" in x])
+#de.create_data("Confirmed")
