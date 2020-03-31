@@ -3,8 +3,8 @@ import pandas as pd
 import plotly.express as px
 import os
 import json
+import commonFuncs
 
-data = json.load(open("Data1/data_new.json", "r"))
 
 def reconstructData():
     new_data = {}
@@ -28,9 +28,31 @@ def reconstructData():
 
     json.dump(new_data, open("Data1/data_countries_provinces_grouped.json", "w"))
 
+def getList(country_data, type="Confirmed"):
+    l = []
+    for key, val in country_data.items():
+        l.append(int(val[type]))
+    return l
+
+data = json.load(open("Data1/data_countries_provinces_grouped.json", "r"))
+
+test_data = data["Sweden"]
+
+dates = list(test_data.keys())
+
+x = list(commonFuncs.get_cases_per_week(test_data, dates)["Confirmed"].values())
+y = getList(test_data)[:-1]
+
+print(x, y)
+
+fig = px.scatter(
+    x=x,
+    y=y
+)
 
 
-
+fig.update_layout(xaxis_type="log", yaxis_type="log")
+fig.show()
 
 
 
