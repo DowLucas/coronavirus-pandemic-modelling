@@ -8,14 +8,12 @@ import time
 import json
 import chart_studio
 import chart_studio.plotly as py
-geo = Nominatim(user_agent="Lucas")
 
-
+geo = Nominatim(user_agent="Covid")
 direc = "Data1"
 
-
-def load_data(file):
-    return pd.read_csv(os.path.join(direc, file))
+def load_csv(fp):
+    return pd.read_csv(fp)
 
 def getSetOfLocations(df):
     locations = df["travel_history_location"].values
@@ -26,11 +24,8 @@ def getSetOfLocations(df):
 
     for loc in locations:
         time.sleep(1)
-        print(loc)
         geoLocation = geo.geocode(loc)
         if geoLocation:
-            print(geoLocation.address)
-
             geo_dict[loc] = [geoLocation.latitude, geoLocation.longitude]
 
     json.dump(geo_dict, open("geo_dict.json", "w"))
@@ -44,21 +39,15 @@ geo_dict = loadGeoDict()
 
 print(geo_dict)
 
-username = "lucasdow1"
-api_key = "ZPnqzLjN0g7VMZX2R16C"
-chart_studio.tools.set_credentials_file(username=username, api_key=api_key)
 
-
-df = load_data("COVID19_open_line_list.csv")
+df = load_csv("Data1/COVID19_open_line_list.csv")
 df = df[["country", "city", "latitude", "longitude", "travel_history_location"]]
 df.dropna(inplace=True)
-
 
 
 df_tavel = df[["latitude", "longitude", "travel_history_location"]]
 
 values = df_tavel.values
-
 
 travel_dict = {}
 count_dict = {}
@@ -68,23 +57,34 @@ for val in values:
         count_dict[val[2]] = 5
     else:
         count_dict[val[2]] += 1
-print(travel_dict)
-print(count_dict)
 
 
 fig = go.Figure()
 
+def createCordToPlaceDict(dict):
+    data = {}
+    for city, value in dict.items():
+
+        if city not in geo_dict.keys():
+            continue
+        lives_CORDS = value
+        visted_CORDS = geo_dict[city]
+        from_place = geo.reverse(lives_CORDS)
+        lives_CORDS = f"{lives_CORDS[0]}_{lives_CORDS[1]}"
+
+        print(from_place)
+        time.sleep(1)
+        data[lives_CORDS] = from_place
+    return data
 
 for city, value in travel_dict.items():
-
 
     if city not in geo_dict.keys():
         continue
 
     lives_CORDS = value
     visted_CORDS = geo_dict[city]
-
-    print(lives_CORDS, visted_CORDS)
+    lives_key = f"{lives_CORDS[0]}_{lives_CORDS[1]}"
 
 
     fig.add_trace(go.Scattermapbox(
@@ -92,7 +92,7 @@ for city, value in travel_dict.items():
         lon=[lives_CORDS[1], visted_CORDS[1]],
         lat=[lives_CORDS[0], visted_CORDS[0]],
         marker={'size': count_dict[city] if count_dict[city] < 30 else 30},
-        text=city,
+        #text=f"From: {geo_cord_to_place[lives_key]}, To: {city}",
     ))
 
 
@@ -107,5 +107,3 @@ fig.update_layout(
 
 
 fig.show()
-
-py.plot(fig, filename="test", auto_open=True)

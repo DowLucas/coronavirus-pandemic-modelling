@@ -84,7 +84,7 @@ class DataExtractor():
                 if not province in all_data[country].keys():
                     all_data[country][province] = {}
 
-                if not date in all_data[country][province].keys():
+                if not date in all_data[country][province    ].keys():
                     all_data[country][province][date] = {
                         "Confirmed": confs,
                         'Deaths': deaths,

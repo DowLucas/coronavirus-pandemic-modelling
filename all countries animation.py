@@ -72,65 +72,15 @@ for country in list(data.keys()):
 
 
     df = pd.concat([sub_df, df], ignore_index=True)
-print(df)
+
 
 range_x = max(df["x"].values.flatten())*2
 range_y = max(df["y"].values.flatten())*2
-print(range_x)
 
 
 fig = px.scatter(df, x="x", y="y", hover_name="date", animation_frame="t", log_x=True, log_y=True, text="con", trendline="lowess",
                  range_x=[0.5, range_x], range_y=[0.5, range_y]
    )
-
-
-
-
-'''
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-df = df.loc[df["con"] == "US"]
-fig, ax = plt.subplots()
-x = df["x"].values
-x = np.array(x, dtype=np.float32)
-
-y = df["y"].values
-y = np.array(y, dtype=np.float32)
-
-
-x2 = []
-y2 = []
-
-fig = plt.figure()
-ax = fig.add_subplot(111)
-line, = ax.plot([], [], lw=3)
-
-def init():
-    x2.clear()
-    y2.clear()
-    line.set_data([], [])
-    return line,
-
-def animate(i):
-    x2.append(np.linspace(x[i],x[i+1],50))
-    y2.append(np.linspace(y[i],y[i+1],50))
-    print()
-
-    line.set_data(x2, y2)
-
-    return line,
-
-anim = animation.FuncAnimation(fig, animate, init_func=init,
-                               frames=len(x)-1, interval=200, blit=False, repeat_delay=1000)
-ax.set_yscale("log")
-ax.set_xscale("log")
-
-ax.set_xlim(0, max(x)*2)
-ax.set_ylim(0, max(y)*2)
-
-plt.show()
-'''
-
 
 fig.show()
 

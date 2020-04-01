@@ -11,39 +11,6 @@ import cv2
 from tqdm import tqdm
 from commonFuncs import *
 
-
-def generate_json_data():
-    data_path = "Data1"
-    files = [x for x in os.listdir(data_path) if ".zip" not in x]
-
-    df = pd.read_csv(os.path.join(data_path, files[2]))
-    all_data = {}
-
-    for n, row in df.iterrows():
-        country = row["Country/Region"]
-        province_state = row["Province/State"] if not type( row["Province/State"]) == float else "None"
-        date = row["ObservationDate"]
-
-        if province_state == country:
-            province_state = "None"
-
-        if not country in all_data.keys():
-            all_data[country] = {}
-
-        if not province_state in all_data[country].keys() :
-            all_data[country][province_state] = {}
-
-        if not date in all_data[country][province_state].keys():
-            all_data[country][province_state][date] = {
-                "Confirmed": row["Confirmed"],
-                'Deaths': row["Deaths"],
-                'Recovered': row["Recovered"],
-            }
-
-    json.dump(all_data, indent=1, fp=open("Data1/data.json", "w"))
-
-#generate_json_data()
-
 def load_data():
     data = json.load(open("Data1/data_new.json", "r"))
     return data
