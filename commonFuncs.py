@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 def datePairs(dates):
     date_pairs = []
@@ -71,3 +72,26 @@ def get_new_cases_per_unit_time(province_data, dates, days=7):
         data["Deaths"][f"Time {n+1}"]  = province_data[weeks[n][1]]["Deaths"] - province_data[weeks[n][0]]["Deaths"]
         data["Recovered"][f"Time {n+1}"] = province_data[weeks[n][1]]["Recovered"] - province_data[weeks[n][0]]["Recovered"]
     return data
+
+def reconstructData():
+    data = json.load(open("Data1/data_new.json", "r"))
+    new_data = {}
+    # Grouping all countries
+    for coun, data_coun in data.items():
+        country_dict = {}
+        if len(data_coun.keys()) > 1:
+            for prov, data_prov in data_coun.items():
+                for date, data_case in data_prov.items():
+                    if date not in country_dict.keys():
+                        country_dict[date] = data_case
+                    else:
+                        for case_type, d in data_case.items():
+                            country_dict[date][case_type] += d
+
+        else:
+            country_dict = data_coun["None"]
+
+
+        new_data[coun] = country_dict
+
+    json.dump(new_data, open("Data1/data_countries_provinces_grouped.json", "w"), indent=2)

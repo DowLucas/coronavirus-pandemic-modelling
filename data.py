@@ -263,6 +263,7 @@ def evaluate_country(country):
     time_graphs(country, provinces, country_data, date_dict, True)
 
 
-evaluate_country("Italy")
+if __name__ == "__main__":
+    evaluate_country("Italy")
 
 
