@@ -117,3 +117,11 @@ def countryCodeConver(country_code):
     country = pycountry.countries.get(alpha_3=country_code)
     country = countryConvert(country.name)
     return country
+
+def countryCodeCountryDict(country_codes):
+    data = {}
+    for code in country_codes:
+        c = pycountry.countries.get(alpha_3=code)
+        name = c.name
+        data[code] = name
+    return data

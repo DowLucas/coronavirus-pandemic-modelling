@@ -10,6 +10,8 @@ import commonFuncs
 
 def checkMeasuredUsed(df, country_code, measures):
 
+    assert country_code in set(df["Country Code"].values), Exception("Country code not in DateFrame, \n{}".format(commonFuncs.countryCodeCountryDict(set(df["Country Code"]))))
+
     con_df = df.loc[df["Country Code"] == country_code]
     con_df["Measures"].replace("No new mitigation", np.nan, inplace=True)
     con_df.dropna(inplace=True)
@@ -76,7 +78,7 @@ def graphGrowthRateWithMitigations(df, country_code, measures):
 if __name__ == "__main__":
     df = pd.read_csv("Data1/mitigation_date_data.csv")
     df.drop(columns=["Unnamed: 0"], inplace=True)
-    graphGrowthRateWithMitigations(df, "NOR", [])
+    graphGrowthRateWithMitigations(df, "GBR", [])
 
 
 
