@@ -139,9 +139,6 @@ def fix_country(country):
 
     return country
 
-
-
-
 def make_data():
     data = load_json("mitigation_data.json")
     data = fixUSStates(data)
@@ -185,7 +182,7 @@ def make_data():
 
     df.to_csv("Data1/mitigation_date_data.csv")
 
-#make_data()
+make_data()
 
 def load_mitigation_date_data(fp):
     return pd.read_csv(fp)
