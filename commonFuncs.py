@@ -1,5 +1,7 @@
 import numpy as np
-import json
+import json, time
+from datetime import datetime
+import pycountry
 
 def datePairs(dates):
     date_pairs = []
@@ -95,3 +97,23 @@ def reconstructData():
         new_data[coun] = country_dict
 
     json.dump(new_data, open("Data1/data_countries_provinces_grouped.json", "w"), indent=2)
+
+
+def convertTimeFormat(t, f, to):
+    t = time.mktime(datetime.strptime(t, f).timetuple())
+    return datetime.utcfromtimestamp(t).strftime(to)
+
+def countryConvert(country):
+    if country == "United States":
+        return "US"
+    
+    return country
+
+def removeMeasureDividers(values):
+    values = list(map(lambda x: x.replace(" | ", ", ")[:-2], values))
+    return values
+
+def countryCodeConver(country_code):
+    country = pycountry.countries.get(alpha_3=country_code)
+    country = countryConvert(country.name)
+    return country
