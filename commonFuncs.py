@@ -11,25 +11,43 @@ def datePairs(dates):
             break
     return date_pairs
 
+def newCasesPerDay(province_data):
+    data = {}
+    dates = list(province_data.keys())
+    for n, date in enumerate(dates):
+        if n == 0:
+            continue
+        data[date] = {}
+        for case in province_data[date].keys():
+            try:
+                data[date][case] = province_data[date][case]-province_data[dates[n-1]][case]
+            except:
+                pass
+
+    return data
+
+
+
 def get_doubling_data(province_data, dates):
     #dates = list(dates.keys())
-
+    cases_per_day = newCasesPerDay(province_data)
     date_pairs = datePairs(dates)
+    print(cases_per_day)
 
     data = {"Confirmed": {}, "Deaths": {}, "Recovered": {}}
     for pair in date_pairs:
-        if pair[0] not in province_data.keys():
+        if pair[0] not in cases_per_day.keys():
             continue
-        for case_type in province_data[pair[0]].keys():
+        for case_type in cases_per_day[pair[0]].keys():
             try:
-                rate_delta = province_data[pair[1]][case_type]/province_data[pair[0]][case_type]
+                rate_delta = cases_per_day[pair[1]][case_type]/cases_per_day[pair[0]][case_type]
             except Exception:
                 rate_delta = 0
             try:
                 data[case_type][f"{pair[0]}-{pair[1]}"] = rate_delta
             except:
                 continue
-
+    print(data["Confirmed"])
     return data
 
 def get_cases_per_day(province_data, dates):

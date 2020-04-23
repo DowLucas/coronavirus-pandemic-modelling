@@ -34,14 +34,16 @@ def getGrowthDataFromCountryCode(country_code):
     growth_data = graph_data.getGrowthData(country)
     return growth_data
 
-def graphGrowthRateWithMitigations(df, country_code, measures):
+def graphGrowthRateWithMitigations(df, country_code, measures, case="Confirmed"):
     loc_df = checkMeasuredUsed(df, country_code, measures)
 
     growth_data = getGrowthDataFromCountryCode(country_code)
     if growth_data == False:
         raise Exception("Country {} not found in dateset, countries:\n{}".format(country_code, set(df["Country Code"])))
     else:
-        growth_data = growth_data["Confirmed"]
+        assert case in growth_data.keys(), f"Case {case} is not a valid case type"
+        growth_data = growth_data[case]
+
     
     Xs = list(growth_data.keys())
     Ys = np.array(list(growth_data.values()))
@@ -53,8 +55,11 @@ def graphGrowthRateWithMitigations(df, country_code, measures):
 
     plt.plot([x for x in range(len(Ys))], Ys)
     plt.scatter([x for x in range(len(Ys))], Ys, c="black", alpha=0.5)
-    plt.grid(True)
+    plt.gca().yaxis.grid(True)
     plt.xticks(ticks=[_ for _ in range(len(Xs))], labels=[x for x in Xs], rotation=90)
+    plt.yticks(ticks=[x for x in range(10)])
+
+    plt.hlines(1, 0, len(Xs), color="r")
 
 
     colors = ["k", "r"]
@@ -71,14 +76,14 @@ def graphGrowthRateWithMitigations(df, country_code, measures):
         cn+=1
     
     plt.legend(title="Mitigation measures in order of implementation")
-    plt.title("Growth Rate of confirmed cases over time including mitigations taken by {}".format(commonFuncs.countryCodeConver(country_code)))
-    plt.ylabel("Growth Rate")
+    plt.title("Growth Rate of confirmed cases over time including mitigations taken by {}".format(commonFuncs.countryCodeConver(country_code)), fontsize=20)
+    plt.ylabel("Growth Rate", fontsize=15)
     plt.show()
 
 if __name__ == "__main__":
     df = pd.read_csv("Data1/mitigation_date_data.csv")
     df.drop(columns=["Unnamed: 0"], inplace=True)
-    graphGrowthRateWithMitigations(df, "GBR", [])
+    graphGrowthRateWithMitigations(df, "SWE", [], case="Confirmed")
 
 
 

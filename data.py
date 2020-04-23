@@ -264,6 +264,6 @@ def evaluate_country(country):
 
 
 if __name__ == "__main__":
-    evaluate_country("Italy")
+    evaluate_country("Sweden")
 
 

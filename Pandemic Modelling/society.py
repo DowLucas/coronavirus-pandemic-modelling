@@ -10,13 +10,13 @@ HEAL_TIME_IN_DAYS = 20
 INCUBATION_IN_DAYS = 2
 
 AFFECT_RADIUS = 30
-INFECT_CHANCE = 0.001
+INFECT_CHANCE = 0.005
 DAYS = 365
 ITERATIONS_PER_DAY = 24
 HEAL_ITERATIONS = ITERATIONS_PER_DAY*HEAL_TIME_IN_DAYS
 POPULATION = 100
-WIDTH = 500
-HEIGHT = 500
+WIDTH = 250
+HEIGHT = 250
 NO_SYMPTOMS_CHANCE = 0
 INCUBATION_ITERATIONS = INCUBATION_IN_DAYS * ITERATIONS_PER_DAY
 
@@ -26,12 +26,13 @@ DATA_COLLECT = []
 print(HEAL_ITERATIONS)
 
 class Society():
-    def __init__(self, pop_size, width, height):
+    def __init__(self, pop_size, width, height, society_isolate):
         self.society_width = width
         self.socity_height = height
+        self.use_isolation = society_isolate
 
 
-        self.population = [Person(0, 0, AFFECT_RADIUS, HEAL_ITERATIONS, INFECT_CHANCE, NO_SYMPTOMS_CHANCE, INCUBATION_ITERATIONS) for _ in range(pop_size)]
+        self.population = [Person(np.random.randint(0, width), np.random.randint(0, height), AFFECT_RADIUS, HEAL_ITERATIONS, INFECT_CHANCE, NO_SYMPTOMS_CHANCE, INCUBATION_ITERATIONS) for _ in range(pop_size)]
         self.succeptibles = self.population[1:]
         self.infected = [self.population[0]]
         self.infected[0].state = 1
@@ -63,13 +64,13 @@ class Society():
                 infected.update(self.society_width, self.socity_height)
                 newly_infected = infected.infect(self.succeptibles)
                 self.moveNewlyInfected(newly_infected)
+            if self.use_isolation:
+                for isolated in self.isolated:
+                    if isolated.state == 2:
+                        self.isolated.pop(self.isolated.index(isolated))
+                        self.removed.append(isolated)
 
-            for isolated in self.isolated:
-                if isolated.state == 2:
-                    self.isolated.pop(self.isolated.index(isolated))
-                    self.removed.append(isolated)
-
-                isolated.update(self.society_width, self.socity_height)
+                    isolated.update(self.society_width, self.socity_height)
 
 
 
@@ -89,6 +90,8 @@ class Society():
         return len(list(filter(lambda x: x.isIsolated == True, self.infected)))
 
     def isolate(self, capacity=10):
+        if not self.use_isolation:
+            return
         if len(self.infected) > capacity or self.isolateStarted:
             self.isolateStarted = True
 
@@ -97,22 +100,22 @@ class Society():
                     infected.isIsolated = True
 
 
-society = Society(POPULATION, WIDTH, HEIGHT)
+society = Society(POPULATION, WIDTH, HEIGHT, False)
 
 society.runNumDays(DAYS, ITERATIONS_PER_DAY)
 DATA_COLLECT = np.array(DATA_COLLECT)
 print(DATA_COLLECT.shape)
 
 fig = go.Figure(data=[
-    go.Bar(name="Infected", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 1], hovertext=[f"{x} Infected" for x in DATA_COLLECT[:, 1]]),
-    go.Bar(name="Susceptible", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:,0], hovertext=[f"{x} Susceptible" for x in DATA_COLLECT[:,0]]),
-    go.Bar(name="Removed", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 2], hovertext=[f"{x} Removed" for x in DATA_COLLECT[:,2]])
+    go.Bar(name="Infected", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 1]/POPULATION, hovertext=[f"{x} Infected" for x in DATA_COLLECT[:, 1]]),
+    go.Bar(name="Susceptible", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:,0]/POPULATION, hovertext=[f"{x} Susceptible" for x in DATA_COLLECT[:,0]]),
+    go.Bar(name="Removed", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 2]/POPULATION, hovertext=[f"{x} Removed" for x in DATA_COLLECT[:,2]])
 ])
 
 fig2 = go.Figure(data=[
-    go.Scatter(name="Infected", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 1]),
-    go.Scatter(name="Susceptible", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 0]),
-    go.Scatter(name="Removed", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 2])
+    go.Scatter(name="Infected", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 1]/POPULATION),
+    go.Scatter(name="Susceptible", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 0]/POPULATION),
+    go.Scatter(name="Removed", x=np.arange(len(DATA_COLLECT)), y=DATA_COLLECT[:, 2]/POPULATION)
 ])
 
 

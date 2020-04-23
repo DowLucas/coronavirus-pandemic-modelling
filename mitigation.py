@@ -182,7 +182,7 @@ def make_data():
 
     df.to_csv("Data1/mitigation_date_data.csv")
 
-make_data()
+#make_data()
 
 def load_mitigation_date_data(fp):
     return pd.read_csv(fp)
@@ -323,7 +323,7 @@ def date_implemented(country_code):
     fig.update_shapes(dict(xref='x', yref='y'))
     fig.show()
 
-date_implemented("ITA")
+date_implemented("SWE")
 
 
 

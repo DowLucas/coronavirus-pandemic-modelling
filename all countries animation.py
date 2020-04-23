@@ -8,7 +8,7 @@ import commonFuncs
 
 
 
-reconstructData()
+commonFuncs.reconstructData()
 
 def getList(country_data, type="Confirmed"):
     l = []
@@ -22,11 +22,14 @@ df = pd.DataFrame(columns=["x", "y", "con", "t", "date"])
 
 X = []
 Y = []
+
+
+
+
 for country in list(data.keys()):
     country_data = data[country]
 
     dates = list(country_data.keys())
-    print(len(dates))
 
     x = list(commonFuncs.get_cases_per_unit_time(country_data, dates, 7)["Confirmed"].values())
     y = list(commonFuncs.get_new_cases_per_unit_time(country_data, dates, 7)["Confirmed"].values())
@@ -39,25 +42,34 @@ for country in list(data.keys()):
     y = np.array(y)
     y[y == 0] = 1
 
-    print(x, y)
-
     sub_df = pd.DataFrame(columns=["x", "y", "con", "t", "date"])
     sub_df["x"] = x
     sub_df["y"] = y
     sub_df["con"] = [country for _ in range(len(x))]
     sub_df["t"] = [t for t in range(len(x))]
     sub_df["date"] = time_pairs
-
-
-
     df = pd.concat([sub_df, df], ignore_index=True)
+
+# Get top countries
+countries = list(data.keys())
+tops = []
+for con in countries:
+    con_max = max(df.loc[df["con"] == con]["x"])
+    print(con, con_max)
+    tops.append((con, con_max))
+
+top10 = list(sorted(tops, key=lambda x: x[1]))[-10:]
+top10countries = list(map(lambda x: x[0], top10))
+top10countries.append("Sweden")
+print(top10countries)
+df = df[df["con"].isin(top10countries)]
 
 
 range_x = max(df["x"].values.flatten())*2
 range_y = max(df["y"].values.flatten())*2
 
 
-fig = px.scatter(df, x="x", y="y", hover_name="date", animation_frame="t", log_x=True, log_y=True, text="con", trendline="lowess",
+fig = px.line(df, x="x", y="y", hover_name="date", color="con", log_x=True, log_y=True, #trendline="lowess",
                  range_x=[0.5, range_x], range_y=[0.5, range_y]
    )
 
