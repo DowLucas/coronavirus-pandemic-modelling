@@ -175,6 +175,9 @@ def newCaseGraph(country, provinces, country_data):
 
     plt.show()
 
+
+
+
 def time_graphs(country, provinces, country_data, date_dict, show_log_graph=True):
     fig = plt.figure(figsize=(10, 5))
     gs = GridSpec(nrows=2, ncols=2)
@@ -246,6 +249,61 @@ def time_graphs(country, provinces, country_data, date_dict, show_log_graph=True
     plt.show()
 
 
+def getWholeWorldData():
+    data = load_data()
+    new_data = {
+        "Confirmed": {},
+        "Deaths": {},
+        "Recovered": {},
+    }
+
+    for con, dat in data.items():
+        for d in dat.values():
+            for date, nums in d.items():
+                for case, num in nums.items():
+                    if not date in new_data[case]:
+                        new_data[case][date] = num
+                    else:
+                        new_data[case][date] += num
+    return new_data
+
+def worldGraph():
+    world_data = getWholeWorldData()
+    date_dict = {date: x for x, date in enumerate(world_data["Confirmed"].keys())}
+
+
+
+    xs = list(date_dict.values())
+
+    confirmed_cases = world_data["Confirmed"].values()
+    confirmed_deths = world_data["Deaths"].values()
+    confirmed_recov = world_data["Recovered"].values()
+
+    print(xs, confirmed_cases)
+
+    plt.plot(xs, confirmed_cases, label="Confirmed COVID-19 Cases")
+    plt.scatter(xs, confirmed_cases, alpha=.5, color="black", s=15)
+
+    plt.plot(xs, confirmed_deths, label="Confirmed COVID-19 Deaths")
+    plt.scatter(xs, confirmed_deths, alpha=.5, color="black", s=15)
+
+    plt.plot(xs, confirmed_recov, label="Confirmed COVID-19 Recoveries")
+    plt.scatter(xs, confirmed_recov, alpha=.5, color="black", s=15)
+
+    plt.yscale("log")
+
+    ticks = [n for n in np.arange(0, len(date_dict), 5)]
+    plt.xticks(ticks, [get_key(n, date_dict) for n in ticks], rotation=45)
+
+    plt.legend()
+    plt.title("Worldwide Numbers of COVID-19 as of 25-04-2020", fontsize=20)
+    plt.xlabel("Date", fontsize=18)
+
+    plt.grid(True, which="both")
+
+
+    plt.show()
+
 def evaluate_country(country):
     data = load_data()
     countries = get_all_countries(data)
@@ -264,6 +322,6 @@ def evaluate_country(country):
 
 
 if __name__ == "__main__":
-    evaluate_country("Sweden")
-
+    #evaluate_country("Sweden")
+    worldGraph()
 
