@@ -4,7 +4,7 @@ import plotly.express as px
 import os
 import json
 import commonFuncs
-
+import plotly.graph_objects as go
 
 
 
@@ -68,6 +68,34 @@ df = df[df["con"].isin(top10countries)]
 range_x = max(df["x"].values.flatten())*2
 range_y = max(df["y"].values.flatten())*2
 
+
+fig = go.Figure()
+
+for con in top10countries:
+    xs = df.loc[df["con"] == con]["x"].values
+    ys = df.loc[df["con"] == con]["y"].values
+    texts = ["" for _ in range(len(xs)-1)]
+    texts.append(con)
+    print(xs)
+    fig.add_trace(go.Scatter(
+        x=xs, y=ys, mode="lines+markers+text", name=con, text=texts
+    ))
+fig.update_layout(
+    title="Log Graph depicting Week Average new cases over total reported cases",
+    xaxis_type="log",
+    yaxis_type="log",
+    yaxis_title="New Confirmed Cases (7 day period)",
+    xaxis_title="Total confirmed Cases (7 day period)",
+    font = dict(
+        family="Roboto",
+        size=19,
+        color="#000"
+    )
+)
+
+fig.show()
+
+quit()
 
 fig = px.line(df, x="x", y="y", hover_name="date", color="con", log_x=True, log_y=True, #trendline="lowess",
                  range_x=[0.5, range_x], range_y=[0.5, range_y]

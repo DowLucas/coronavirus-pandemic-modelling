@@ -6,24 +6,24 @@ from plotly.subplots import make_subplots
 import plotly.express as px
 
 
-HEAL_TIME_IN_DAYS = 20
-INCUBATION_IN_DAYS = 2
-
-AFFECT_RADIUS = 30
-INFECT_CHANCE = 0.005
+HEAL_TIME_IN_DAYS = 14
+INCUBATION_IN_DAYS = 7
+AFFECT_RADIUS = 25-(25*0.25)
+INFECT_CHANCE = 0.005#-(0.005*0.25)
 DAYS = 365
 ITERATIONS_PER_DAY = 24
 HEAL_ITERATIONS = ITERATIONS_PER_DAY*HEAL_TIME_IN_DAYS
-POPULATION = 100
-WIDTH = 250
-HEIGHT = 250
+POPULATION = 500
+WIDTH = 300
+HEIGHT = 300
 NO_SYMPTOMS_CHANCE = 0
 INCUBATION_ITERATIONS = INCUBATION_IN_DAYS * ITERATIONS_PER_DAY
+USE_ISOLATION = False
 
 
 DATA_COLLECT = []
 
-print(HEAL_ITERATIONS)
+print(INFECT_CHANCE)
 
 class Society():
     def __init__(self, pop_size, width, height, society_isolate):
@@ -100,7 +100,7 @@ class Society():
                     infected.isIsolated = True
 
 
-society = Society(POPULATION, WIDTH, HEIGHT, False)
+society = Society(POPULATION, WIDTH, HEIGHT, USE_ISOLATION)
 
 society.runNumDays(DAYS, ITERATIONS_PER_DAY)
 DATA_COLLECT = np.array(DATA_COLLECT)
@@ -119,7 +119,19 @@ fig2 = go.Figure(data=[
 ])
 
 
-fig.update_layout(barmode='stack', bargap=0)
+fig.update_layout(
+    title="SIR Model 25% Lower Infect Radius",
+    font=dict(
+        family="Roboto",
+        size=19,
+        color="#000"
+    ),
+    xaxis_title="Iterations",
+    yaxis_title="Proportion of Population",
+    barmode='stack',
+    bargap=0,
+)
+
 fig.show()
 fig2.show()
 

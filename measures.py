@@ -27,7 +27,6 @@ def checkMeasuredUsed(df, country_code, measures):
 def getGrowthDataFromCountryCode(country_code):
     country = pycountry.countries.get(alpha_3=country_code)
     if not country:
-
         raise Exception("Country Not Found")
     country = commonFuncs.countryConvert(country.name)
 
@@ -57,7 +56,9 @@ def graphGrowthRateWithMitigations(df, country_code, measures, case="Confirmed")
     plt.scatter([x for x in range(len(Ys))], Ys, c="black", alpha=0.5)
     plt.gca().yaxis.grid(True)
     plt.xticks(ticks=[_ for _ in range(len(Xs))], labels=[x for x in Xs], rotation=90)
-    plt.yticks(ticks=[x for x in range(10)])
+
+
+    plt.yticks(ticks=[x for x in range(np.round(np.argmax(Ys)))])
 
     plt.hlines(1, 0, len(Xs), color="r")
 
@@ -76,14 +77,14 @@ def graphGrowthRateWithMitigations(df, country_code, measures, case="Confirmed")
         cn+=1
     
     plt.legend(title="Mitigation measures in order of implementation")
-    plt.title("Growth Rate of confirmed cases over time including mitigations taken by {}".format(commonFuncs.countryCodeConver(country_code)), fontsize=20)
+    plt.title("Growth Rate of NEW Deaths from COVID-19 over time including mitigations taken by {}".format(commonFuncs.countryCodeConver(country_code)), fontsize=20)
     plt.ylabel("Growth Rate", fontsize=15)
     plt.show()
 
 if __name__ == "__main__":
     df = pd.read_csv("Data1/mitigation_date_data.csv")
     df.drop(columns=["Unnamed: 0"], inplace=True)
-    graphGrowthRateWithMitigations(df, "SWE", [], case="Confirmed")
+    graphGrowthRateWithMitigations(df, "SWE", [], case="Deaths")
 
 
 

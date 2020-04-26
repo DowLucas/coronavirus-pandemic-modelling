@@ -231,9 +231,9 @@ def time_graphs(country, provinces, country_data, date_dict, show_log_graph=True
 
     ax_deaths.axes.get_xaxis().set_visible(False)
 
-    ax_cases.set_title("Confirmed Cases of COVID-19")
-    ax_deaths.set_title("Confirmed Deaths of COVID-19")
-    ax_recovered.set_title("Confirmed Recoveries of COVID-19", y=-0.1)
+    ax_cases.set_title("Confirmed Cases of COVID-19", fontsize=20)
+    ax_deaths.set_title("Confirmed Deaths of COVID-19", fontsize=20)
+    ax_recovered.set_title("Confirmed Recoveries of COVID-19", y=-0.1, fontsize=20)
 
     ax_cases.legend(title="State/Province")
 
@@ -322,6 +322,6 @@ def evaluate_country(country):
 
 
 if __name__ == "__main__":
-    #evaluate_country("Sweden")
+    evaluate_country("Sweden")
     worldGraph()
 
